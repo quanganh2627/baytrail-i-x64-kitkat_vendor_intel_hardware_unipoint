@@ -33,16 +33,16 @@ initialize(void)
 
 	//set ballistics characteristics 
 	// DLG TODO move to unipoint.h all subject to change
-	gballistic.gain.X = 5e2;//5e2;
-	gballistic.gain.Y = 5e2;//-1e2;
-	gballistic.precision.X = 0.20;//0.05;
-	gballistic.precision.Y = 0.20;//0.05;
-	gballistic.vmax.X = 1.0;//0.39;
-	gballistic.vmax.Y = 1.0;//0.53;
+	gballistic.gain.X = 4000.0F;// gain on delta signal 
+	gballistic.gain.Y = 5000.0F;// gain on delta signal 
+	gballistic.precision.X = 0.2;// accuracy of delta signal
+	gballistic.precision.Y = 0.2;// accuracy of delta signal
+	gballistic.vmax.X = 0.5;//50;// largest delta before cap
+	gballistic.vmax.Y = 0.5;//50;// largest delta before cap
 	gballistic.lower.X = F11_XMIN;
-	gballistic.lower.Y = F11_YMIN;
-	gballistic.upper.X = F11_XMAX;
-	gballistic.upper.Y = F11_YMAX;
+	gballistic.lower.Y = F11_XMIN; // both same slope
+	gballistic.upper.X = 280.0F;//F11_XMAX/2;
+	gballistic.upper.Y = 280.0F;//F11_XMAX/2; // both same slope
 
 	gcentroidHistoryIndex = 0;
 

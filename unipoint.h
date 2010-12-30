@@ -16,7 +16,11 @@ extern "C" {
 #define TAP_GESTURE		    5
 #define TAPHOLD_GESTURE	    6
 #define POINTER_GESTURE     7
-#define TIMEDOUT_GESTURE    8
+#define TAPBACKEDGE_GESTURE	8
+#define TAPCENTEREDGE_GESTURE	9
+#define TAPFRONTEDGE_GESTURE 10
+#define TIMEDOUT_GESTURE    11
+#define PROCESSING_COMPLETE 12
 
 // processing gesture modes
 #define PROC_OFF					0
@@ -27,14 +31,19 @@ extern "C" {
 #define PROC_BALLISTICS_START		5
 #define PROC_BALLISTICS_RUN			6
 
-#define F11_PER_SEC 100.0
+#define F11_PER_SEC 90.0
 #define TOUCH_MIN_DURATION 0.03
 #define TAP_MAX_DURATION 0.25
-#define SWIPE_MAX_DURATION 1.0
+#define SWIPE_MAX_DURATION 0.500
 
 #define TOUCH_MIN_DURATION_FRAMES ((int)(F11_PER_SEC * TOUCH_MIN_DURATION + 0.5))
 #define TAP_MAX_DURATION_FRAMES ((int)(F11_PER_SEC * TAP_MAX_DURATION + 0.5))
 #define SWIPE_MAX_DURATION_FRAMES ((int)(F11_PER_SEC * SWIPE_MAX_DURATION + 0.5)) 
+
+#define ANGLE_HISTOGRAM_BIN_SIZE 20.0 // 20 degrees per bin
+#define ANGLE_HISTOGRAM_BIN_COUNT ((int)(((360.0/ANGLE_HISTOGRAM_BIN_SIZE)+0.5))) // number of bins plus 1 for small mags rounded
+
+#define LOOKAHEAD_BUFFER_SIZE 5
 
 #ifndef bool
     #define bool char
@@ -68,43 +77,51 @@ typedef struct {
 } gesture_direction_trend;
 
 typedef struct {
-	float LRSegSX;	
-	float LRSeg1X;  
-	float LRSeg2X;   
-	float LRSegEX;   
-	float LRtrendS1; 
-	float LRtrend12; 
-	float LRtrend2E; 
-	int   LRindexS;  
-	int   LRindex1;  
-	int   LRindex2;  
 	int   LRindexE;  
-	float LRMaxSegSX;
 	float LRMaxEX;
 	float LRMaxTrend; 
 
-	float UDSegSY;       
-	float UDSeg1Y;       
-	float UDSeg2Y;       
-	float UDSegEY;       
-	float UDtrendS1;     
-	float UDtrend12;     
-	float UDtrend2E;     
-	int   UDindexS;      
-	int   UDindex1;      
-	int   UDindex2;      
-	int   UDindexE; 
+	float UDVelTrend;
 
-	float UDMainVelocity; 
-	float UDVelTrig;
-	float LREdgeVelocity;
 	float LRVelTrig;
+	float LRRailHug;
 
 	int   CoTrendUp;
 	int   CoTrendDown;
 	int   CoTrendNone;
 	int   CoTrendOppos;
 
+	float CoTrendUpDist;
+	float CoTrendDownDist;
+	float CoTrendNoneDist;
+
+	float XClosure;
+	float YClosure;
+
+	float weightedPeak;
+	float weightedPeakAngle;
+
+	float peakedness;
+	float peakednessAngle;
+
+	float dullPeak;
+	float dullPeakAngle;
+
+	float tapPeak;
+	float angleMagMax;
+
+	float sequenceHash;
+	float locationHash;
+	float upSlotCode;
+	float downSlotCode;
+	float noneSlotCode;
+	float upLocationNorm;
+	float downLocationNorm;
+	float noneLocationNorm;
+	
+	int	  ClassificationPath;
+	int   Classification;
+	int   ClassGroundTruth;
 	int   frameCount;
 } gesture_features;
 
@@ -136,14 +153,23 @@ typedef struct {
 typedef struct {
 	float X;
 	float Y;
-	float smoothX;
-	float smoothY;
+	float Xs;
+	float Ys;
+	float Xts;
+	float Yts;
 	float dX;
 	float dY;
-	float velocityLREdge;
-	float velocityUDMain;
-	float smoothWx;
-	float smoothWy;
+	float dXs;
+	float dYs;
+	float dXts;
+	float dYts;
+	float ddXsdYs;
+	float dXsdYs;
+	float T;
+	float Ts;
+	float dTs;
+	float Wxs;
+	float Wys;
 	int CoTrendUp;
 	int CoTrendDown;
 	int CoTrendNone;
@@ -164,6 +190,12 @@ typedef struct {
 } centroid_history_features;
 
 typedef struct {
+	float dX;
+	float dY;
+	int count;
+} slope_histogram_record;
+
+typedef struct {
 	point precision;
 	point gain;
 	point vmax;
@@ -171,8 +203,8 @@ typedef struct {
 	point lower;
 } ballistics;
 
-#define F11_XMAX ((double)354) // maximum value of X register (same as centroid_registers->Xmax)
-#define F11_YMAX ((double)1353) // maximumn value of Y register (same as centroid_registers->Ymax)
+#define F11_XMAX ((double)320) // maximum value of X register (same as centroid_registers->Xmax)
+#define F11_YMAX ((double)1145) // maximumn value of Y register (same as centroid_registers->Ymax)
 #define F11_XMIN ((double)0) 
 #define F11_YMIN ((double)0) 
 
@@ -183,6 +215,8 @@ int release(void);
 int centroidHistoryPull(F11_centroid_registers * cent, const unsigned int offset);
 int centroidScratchPull(centroid_scratchpad * scratch, const unsigned int offset);
 int gestureFeaPull(gesture_features * fea);
+int angleHistogramRawPull(float * hist, const unsigned int offset);
+int angleHistogramNormPull(float * hist, const unsigned int offset);
 int centroidHistoryCount( int * count);
 
 

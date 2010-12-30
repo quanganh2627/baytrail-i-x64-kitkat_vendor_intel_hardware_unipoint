@@ -211,7 +211,7 @@ event_setup_input_dev(event_handles * restrict handles, const char *path)
 
 static inline int convert(int distance)
 {
-    return (int)(distance * 1.5f);
+    return (int)(distance * 0.1f);
 }
 
 static inline int convert_x(int distance)
@@ -300,7 +300,7 @@ static inline void event_send_gesture(
 		rel_x = cent_out.X;
 		rel_y = cent_out.Y;
 
-	  fprintf(stdout, "Daemon Got From algorithm relative x:%d y:%d\n", rel_x, rel_y);
+		fprintf(stdout, "Daemon Got From algorithm relative x:%d y:%d\n", rel_x, rel_y);
 	/*   
 		if ((abs(rel_x)*16/5) > abs(rel_y)) {
             uinput_write(uinput_fd, EV_REL, REL_X, convert_x(rel_x));
@@ -312,12 +312,10 @@ static inline void event_send_gesture(
             fprintf(stdout, "Daemon Send uinput event relative x:%d y:%d\n", 0, convert_y(rel_y));
         }
 */
-	  		uinput_write(uinput_fd, EV_REL, REL_X, rel_x);
-            uinput_write(uinput_fd, EV_REL, REL_Y, convert_y(rel_y));
+ 		uinput_write(uinput_fd, EV_REL, REL_X, convert_x(rel_x));
+		uinput_write(uinput_fd, EV_REL, REL_Y, convert_y(rel_y));
 		
-		
-			break;
-
+		break;
 	default:
 		return;
 
