@@ -28,3 +28,6 @@ LOCAL_C_INCLUDES := \
         external/libsvm 
 LOCAL_MODULE := unipoint-daemon
 include $(BUILD_EXECUTABLE)
+
+# Build the SensorsTest app
+include $(LOCAL_PATH)/UnipointDemo/Android.mk
