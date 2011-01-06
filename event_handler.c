@@ -230,6 +230,9 @@ static inline int convert_y(int distance)
 
 
 
+static int lastgesture;
+static clock_t last_clock;
+
 /*
 This function is used to send gesture to event hub 
 */
@@ -250,8 +253,7 @@ static inline void event_send_gesture(
 		 uinput_syn(uinput_fd);
 
 		 uinput_write(uinput_fd, EV_KEY, KEY_RIGHT, 0); //what's the ev_value for KEY_LEFT, need verify ,what 's the meaning of it 
-			
-
+		lastgesture = gesture_mask;
 		//do right 
 		break;
 	case MASK_LEFT_GESTURE:
@@ -261,37 +263,64 @@ static inline void event_send_gesture(
 
 		 uinput_write(uinput_fd, EV_KEY, KEY_LEFT, 0); //what's the ev_value for KEY_LEFT, need verify ,what 's the meaning of it 
 		//do right 
-			break;
+		lastgesture = gesture_mask;
+
+		break;
 	case MASK_DOWN_GESTURE:
-		fprintf(stdout, "uinput event - down\n"); 
+		fprintf(stdout, "uinput event - down\n");
 		 uinput_write(uinput_fd, EV_KEY, KEY_DOWN, 1); //what's the ev_value for KEY_LEFT, need verify ,what 's the meaning of it 
 		 uinput_syn(uinput_fd);
 
 		uinput_write(uinput_fd, EV_KEY, KEY_DOWN, 0); //what's the ev_value for KEY_LEFT, need verify ,what 's the meaning of it 
+		lastgesture = gesture_mask;
+
 		//do right 
 		break;
 	case MASK_UP_GESTURE:
 		fprintf(stdout, "uinput event - up\n"); 
 		 uinput_write(uinput_fd, EV_KEY, KEY_UP, 1); //what's the ev_value for KEY_LEFT, need verify ,what 's the meaning of it 
 		 uinput_syn(uinput_fd);
+		lastgesture = gesture_mask;
 
 		uinput_write(uinput_fd, EV_KEY, KEY_UP, 0); //what's the ev_value for KEY_LEFT, need verify ,what 's the meaning of it 
 			//do right 
 			break;
 	case MASK_TAP_GESTURE:
-		uinput_write(uinput_fd, EV_KEY, BTN_MOUSE, 1);
-        uinput_syn(uinput_fd);
-        uinput_write(uinput_fd, EV_KEY, BTN_MOUSE, 0);
-        fprintf(stdout, "uinput event - tap\n"); 
-		// LIRONG : Should we change to ABS event ? or just leave it as left button click ? 
-		//do right 
+		if(lastgesture==MASK_TAP_GESTURE && last_clock!=0)
+		{
+
+			clock_t now = clock();
+
+			//LIMIT to 3 SECONDS
+			if((now-last_clock)<3*CLOCKS_PER_SEC)
+			{
+				uinput_write(uinput_fd, EV_KEY, BTN_MOUSE, 1);
+				uinput_syn(uinput_fd);
+				uinput_write(uinput_fd, EV_KEY, BTN_MOUSE, 0);
+				fprintf(stdout, "uinput event - tap\n");
+				//do right
+				lastgesture = 0;
+				last_clock=0;
+			}else
+			{
+				lastgesture = MASK_TAP_GESTURE; //clear lastgesture
+				last_clock = now;
+			}
+
+		}else{
+
+			lastgesture = gesture_mask;
+			last_clock = clock();
+		}
 		break;
 	case MASK_TAPHOLD_GESTURE:
 
 		//which operation to define , tempary define as left mouse click without release 
 		uinput_write(uinput_fd, EV_KEY, BTN_LEFT, 1);
-        uinput_syn(uinput_fd);
+		uinput_syn(uinput_fd);
 		
+		lastgesture = gesture_mask;
+
 			//do right 
 			break;
 	case MASK_POINTER_GESTURE:
@@ -315,6 +344,8 @@ static inline void event_send_gesture(
  		uinput_write(uinput_fd, EV_REL, REL_X, convert_x(rel_x));
 		uinput_write(uinput_fd, EV_REL, REL_Y, convert_y(rel_y));
 		
+		lastgesture = gesture_mask;
+
 		break;
 	default:
 		return;
