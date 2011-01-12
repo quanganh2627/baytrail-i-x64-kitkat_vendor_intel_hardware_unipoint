@@ -27,16 +27,12 @@
 
 
 
-#ifdef CONFIG_USE_DAVI_ALGORITHM
 //include the algorithm
 #include "unipoint.h"
 #include <time.h>
 #include "statemachine.h"
 
 
-
-
-#endif 
 #define OUT_OF_MEM "Out of memory.\n"
 
 #define CAPVALS_DEBUG 0
@@ -48,6 +44,7 @@
 static char unipoint_device_path[BUF_SIZE];
 static const unsigned int event_handles_max = 10;
 volatile sig_atomic_t do_event_loop = 1;
+static int wait_double_tap_timeout;
 
 typedef union {
     void * v;
@@ -216,12 +213,6 @@ static inline int convert_y(int distance)
     return -convert(distance);
 }
 
-#ifdef CONFIG_USE_DAVI_ALGORITHM
-
-
-
-
-
 
 /*
 This function is used to send gesture to event hub 
@@ -294,13 +285,13 @@ void event_send_gesture(
 	case MASK_TAP_GESTURE:
 
 		if(IsDoubleTap()==1)
-		{
-			uinput_write(uinput_fd, EV_KEY, BTN_MOUSE, 1);
+			wait_double_tap_timeout = 1;
+		break;
+	case MASK_DOUBLE_TAP:
+		uinput_write(uinput_fd, EV_KEY, BTN_MOUSE, 1);
 	        uinput_syn(uinput_fd);
 	        uinput_write(uinput_fd, EV_KEY, BTN_MOUSE, 0);
 	        fprintf(stdout, "uinput event - tap\n");
-
-		}
 		// LIRONG : Should we change to ABS event ? or just leave it as left button click ? 
 		break;
 	case MASK_TAPHOLD_GESTURE:
@@ -344,33 +335,6 @@ void event_send_gesture(
     uinput_syn(uinput_fd);
 }
 
-
-
-
-#else
-static inline void event_send_gesture
-(const int gesture_mask, const int rel_x, const int rel_y, const int flick_time, const int uinput_fd)
-{
-    if (!(gesture_mask & 0x1)) {
-        if ((abs(rel_x)*16/5) > abs(rel_y)) {
-            uinput_write(uinput_fd, EV_REL, REL_X, convert_x(rel_x));
-            uinput_write(uinput_fd, EV_REL, REL_Y, 0);
-            fprintf(stdout, "uinput event x:%d y:%d\n", convert_x(rel_x), 0);
-        } else {
-            uinput_write(uinput_fd, EV_REL, REL_X, 0);
-            uinput_write(uinput_fd, EV_REL, REL_Y, convert_y(rel_y));
-            fprintf(stdout, "uinput event x:%d y:%d\n", 0, convert_y(rel_y));
-        }
-    } else {
-        uinput_write(uinput_fd, EV_KEY, BTN_MOUSE, 1);
-        uinput_syn(uinput_fd);
-        uinput_write(uinput_fd, EV_KEY, BTN_MOUSE, 0);
-        fprintf(stdout, "uinput event - tap\n");
-    }
-    uinput_syn(uinput_fd);
-}
-
-#endif
 /**
  * Main event dispatch point
  * 
@@ -379,12 +343,9 @@ static inline void event_send_gesture
  * \param uinput_fd uinput file descriptor for motion events
  * \return Whether to continue running the event loop
  */
-#ifdef CONFIG_USE_DAVI_ALGORITHM
-
 static long long  count;
 
 
-#endif
 static inline int
 event_dispatcher(event_handles * restrict const handles, int uinput_fd, FILE *sample_fd, char *op)
 {
@@ -421,14 +382,24 @@ event_dispatcher(event_handles * restrict const handles, int uinput_fd, FILE *sa
 
 	//if there is no data from stored file, try to get from event device 
     if (!has_data) {
-	    nfds = poll(handles->pfds, handles->nfds, -1);
+	    if (wait_double_tap_timeout)
+	    	nfds = poll(handles->pfds, handles->nfds, 200);
+	    else nfds = poll(handles->pfds, handles->nfds, -1);
+
 	    if(nfds < 0) {
 		if (errno == EINTR)
 		    return error;
 			perror("Error was: ");
 			return nfds;
 	    } 
-
+	    if (nfds == 0) {
+		    if (wait_double_tap_timeout) {
+				centroid_output cent_out; //dummy
+				event_send_gesture(MASK_DOUBLE_TAP,cent_out,uinput_fd);
+				wait_double_tap_timeout = 0;
+		    }
+	    }
+	    wait_double_tap_timeout = 0;
 		//there is data from event device ,store data into gs array, and if need record, record to file .
   		if (nfds > 0) {
 			 /* Core for data from device */
@@ -462,8 +433,6 @@ event_dispatcher(event_handles * restrict const handles, int uinput_fd, FILE *sa
 
 //no matter where the data is from, process it here 		
     if (has_data) {
-
-#ifdef CONFIG_USE_DAVI_ALGORITHM
 
 	{//Process using Davi's algorithm 
 		F11_centroid_registers cent;
@@ -545,102 +514,6 @@ event_dispatcher(event_handles * restrict const handles, int uinput_fd, FILE *sa
 			StateMachine_process(uinput_fd,gest_out,cent_out);
 			
 	}//Part for Davi's algorithm
-#else 
-
-{
-
-//Process using Alek's algorithm 
-        if (gs[5] & 0x11) {
-
-
-					//event_send_gesture(gs[4], gs[6], gs[7], gs[8], uinput_fd); 
-		} else { /* do our processing to rel */
-			static int x[100], y[100], c[100];
-			static int count;
-			static clock_t last_clock;
-
-			if (clock() - last_clock > 75000) {
-				count = 0;
-				fprintf(stdout, "@ reset\n");
-			}
-
-			c[count] = last_clock = clock();
-			x[count] = gs[1] / 20;
-			y[count] = gs[2] / 20;
-			
-			if (count) {
-				int xdiff = x[count] - x[count - 1];
-				int ydiff = y[count] - y[count - 1];
-				int diff = xdiff * xdiff + ydiff * ydiff;
-
-				if (diff < 4)
-					return 0;
-				if (diff > 36)
-					return 0;
-			}
-
-			if (count == 4) {
-				int xmax = 0, xmin = 4096;
-				int xdiff;
-				int xdir = 0;
-				int ymax = 0, ymin = 4096;
-				int ydiff;
-				int ydir = 0;
-				int cdiff;
-				int loop;
-				int sxy = 0, sx = 0, sy = 0, sx2 = 0, n = count + 1, a;
-
-				fprintf(stdout, "@ ");
-				for (loop = 0; loop < n; loop++) {
-					fprintf(stdout, "(%d, %d) ", x[loop], y[loop]);
-					if (xmax < x[loop])
-						xmax = x[loop];
-					if (xmin > x[loop])
-						xmin = x[loop];
-					if (ymax < y[loop])
-						ymax = y[loop];
-					if (ymin > y[loop])
-						ymin = y[loop];
-					sxy += x[loop] * y[loop];
-					sx += x[loop];
-					sy += y[loop];
-					sx2 += x[loop] * x[loop];
-				}
-				//fprintf(stdout, "\n");
-				fprintf(stdout, "sxy:%d, sx:%d, sy:%d, sx2:%d ", sxy, sx, sy, sx2);
-				xdiff = xmax - xmin;
-				ydiff = ymax - ymin;
-				cdiff = c[count] - c[0];
-				if (sx2 * n - sx * sx) {
-					a = (sxy * n - sx*sy) * 100 /(sx2 * n - sx * sx);
-					fprintf(stdout, "a = %d, xdiff = %d, ydiff = %d, cdiff = %d\n", a, xdiff, ydiff, cdiff);
-				} else {
-					a = 1000;
-					fprintf(stdout, "a = max, xdiff = %d, ydiff = %d, cdiff = %d\n", xdiff, ydiff, cdiff);
-				}
-
-				if (ydiff >= xdiff * 2)
-					ydir = ydiff * (y[n - 1] >= y[0] ? 1 : -1);
-				else if (ydiff >= xdiff && a > 100)
-					ydir = ydiff * (y[n - 1] >= y[0] ? 1 : -1);
-				else	xdir = xdiff * (x[n - 1] >= x[0] ? 1 : -1);
-
-				if (cdiff > 100000) {
-					xdir /= 2;
-					ydir /= 2;
-				}
-				event_send_gesture(0x10, xdir, 0, 10, uinput_fd);
-				event_send_gesture(0x10, 0, ydir, 10, uinput_fd);
-				count = 0;
-			}
-			else count++;
-		}
-
-}//Part for Alek's algorithm
-
-#endif 
-
-	   
 	}
 
 	 return error;
@@ -675,10 +548,7 @@ int event_loop(char *op, char *fname)
         goto free_handles;
     }
 
-#ifdef  CONFIG_USE_DAVI_ALGORITHM
 	initialize();
-#endif 
-
 
    // signal(SIGINT, handler);
     while(do_event_loop)

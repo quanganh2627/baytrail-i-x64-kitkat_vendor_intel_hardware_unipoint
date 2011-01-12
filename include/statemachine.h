@@ -14,6 +14,7 @@
 #define MASK_POINTER_GESTURE     0x40
 #define MASK_VOLUME_UP           0x80
 #define MASK_VOLUME_DOWN         0x100
+#define MASK_DOUBLE_TAP		0x200
 
 typedef enum E_MODE{
 	MODE_NORMAL,

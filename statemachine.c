@@ -22,7 +22,7 @@
 #include "event_handler.h"
 #define SM_MAX_GESTURES 20
 
-typedef struct s_gesture_out_time{
+typedef struct s_gesture_out_time{
 	gesture_output cent;
 	clock_t fireTime;
 }Gesture_Out_Time;
@@ -105,76 +105,7 @@ MODE GetCurrentMode()
 int IsDoubleTap()
 {
 	
-		int curentindex = gHistoryIndex-1;
-		int preindex = 0;
-		int prepreindex = 0;
-		int ret = -1;
-	
-#ifdef DEBUG	
-		fprintf(stdout, " Current Counter = %d ,gHistoryIndex = %d\n",counter,gHistoryIndex);
-#endif 
-		
-	
-		if(!bexceeded & gHistoryIndex < 2)
-		{
-	
-#ifdef DEBUG
-			fprintf(stdout, "%s,!bexceeded & gHistoryIndex < 3, return\n ",ctime(&timep));
-#endif 
-			//No gestures to determin 
-			return ; 
-		}
-			
-	
-		preindex = curentindex- 1 ; 
-		
-	
-	
-		
-		//Get real index for curentindex 
-		if(curentindex==-1 && bexceeded) //if index 0 is not real 0 
-		{
-					curentindex = SM_MAX_GESTURES-1;
-		}else if(curentindex==-2 && bexceeded)
-		{
-				curentindex = SM_MAX_GESTURES-2;
-		}
-	
-	
-		//Get real index for preindex 
-		if(preindex==-1 && bexceeded) //if index 0 is not real 0 
-		{
-				preindex = SM_MAX_GESTURES-1;
-		}else if(preindex==-2 && bexceeded)
-		{
-			preindex = SM_MAX_GESTURES-2;
-		}
-
-		if(gHistory[preindex].cent.type == TAP_GESTURE && gHistory[curentindex].cent.type == TAP_GESTURE )
-		{
-	
-			if((gHistory[curentindex].fireTime - gHistory[preindex].fireTime )<1*CLOCKS_PER_SEC){
-#ifdef DEBUG
-				fprintf(stdout, "Double Tap Detected\n");
-#endif 
-
-				
-				return 1;
-				
-			}
-		}
-	
-		return 0;
-	
-	}
-
-
-
-//This function is used to check and do the  actual mode change 
-void checkAndSwitchMode()
-{
-
-	int curentindex = gHistoryIndex-1;
+	int curentindex = (gHistoryIndex - 1 + SM_MAX_GESTURES) % SM_MAX_GESTURES;
 	int preindex = 0;
 	int prepreindex = 0;
 	int ret = -1;
@@ -183,6 +114,49 @@ void checkAndSwitchMode()
 	fprintf(stdout, " Current Counter = %d ,gHistoryIndex = %d\n",counter,gHistoryIndex);
 #endif 
 	
+
+	if(!bexceeded & gHistoryIndex < 2)
+	{
+
+#ifdef DEBUG
+		fprintf(stdout, "%s,!bexceeded & gHistoryIndex < 3, return\n ",ctime(&timep));
+#endif 
+		//No gestures to determin 
+		return ; 
+	}
+		
+	preindex = (curentindex - 1 + SM_MAX_GESTURES) % SM_MAX_GESTURES;
+	
+	if(gHistory[preindex].cent.type == TAP_GESTURE && gHistory[curentindex].cent.type == TAP_GESTURE )
+	{
+		int diff = gHistory[curentindex].fireTime - gHistory[preindex].fireTime;
+
+		if(diff < 0.7*CLOCKS_PER_SEC){
+#ifdef DEBUG
+			fprintf(stdout, "Double Tap Detected\n");
+#endif 
+			return 1;
+
+		}
+	}
+
+	return 0;
+
+}
+
+
+
+//This function is used to check and do the  actual mode change 
+void checkAndSwitchMode()
+{
+	int curentindex = (gHistoryIndex - 1 + SM_MAX_GESTURES) % SM_MAX_GESTURES;
+	int preindex = 0;
+	int prepreindex = 0;
+	int ret = -1;
+
+#ifdef DEBUG
+	fprintf(stdout, " Current Counter = %d ,gHistoryIndex = %d\n",counter,gHistoryIndex);
+#endif 
 
 	if(!bexceeded & gHistoryIndex < 3)
 	{
@@ -193,79 +167,43 @@ void checkAndSwitchMode()
 		//No gestures to determin 
 		return ; 
 	}
-		
 
-	preindex = curentindex- 1 ; 
-	prepreindex = preindex-1 ;
-
-
-	
-	//Get real index for curentindex 
-	if(curentindex==-1 && bexceeded) //if index 0 is not real 0 
-	{
-				curentindex = SM_MAX_GESTURES-1;
-	}else if(curentindex==-2 && bexceeded)
-	{
-			curentindex = SM_MAX_GESTURES-2;
-	}
-
-
-	//Get real index for preindex 
-	if(preindex==-1 && bexceeded) //if index 0 is not real 0 
-	{
-			preindex = SM_MAX_GESTURES-1;
-	}else if(preindex==-2 && bexceeded)
-	{
-		preindex = SM_MAX_GESTURES-2;
-	}
-
-
-	//Get real index for prepreindex 
-	if(prepreindex==-1 && bexceeded) //if index 0 is not real 0 
-	{
-			prepreindex = SM_MAX_GESTURES-1;
-	}else if(prepreindex==-2 && bexceeded)
-	{
-		prepreindex = SM_MAX_GESTURES-2;
-	}
-
-	
+	preindex = (curentindex - 1 + SM_MAX_GESTURES) % SM_MAX_GESTURES;;
+	prepreindex = (preindex -1 + SM_MAX_GESTURES) % SM_MAX_GESTURES;
 
 	if(gHistory[prepreindex].cent.type == TAP_GESTURE && gHistory[preindex].cent.type == TAP_GESTURE )
 	{
 
-		if((gHistory[curentindex].fireTime - gHistory[prepreindex].fireTime )<1*CLOCKS_PER_SEC){
-				if(gCurMode == MODE_NORMAL)
-				{
-					gCurMode = MODE_VOLUME;
+		if((gHistory[curentindex].fireTime - gHistory[prepreindex].fireTime )<0.5*CLOCKS_PER_SEC){
+			if(gCurMode == MODE_NORMAL)
+			{
+				gCurMode = MODE_VOLUME;
 
-				}else if(gCurMode == MODE_VOLUME)
-				{
-					gCurMode = MODE_NORMAL;
-
-				}
-
-
-				//find mode switch triggle ,  clear the history box. 
-				gHistoryIndex = 0;
-				bexceeded = false;
-				
-				fprintf(stdout, "%s, MODE_NORMAL, MODE CHANGED SUCCESSFUlly, new MODE= %d\n",ctime(&timep),gCurMode);
-
-				statechanged = 1;
-
-				//Invoke Socket Thread 's callback function to send notification to Client. 
-				ret = CallBack_NotifyClientOnStateChange();
-				if(ret!=0)
-				{
-					fprintf(stdout, " Notify Client about state change failed \n");
-					statechanged = 0;
-				}
+			}else if(gCurMode == MODE_VOLUME)
+			{
+				gCurMode = MODE_NORMAL;
 
 			}
-	}
 
-	
+
+			//find mode switch triggle ,  clear the history box. 
+			gHistoryIndex = 0;
+			bexceeded = false;
+
+			fprintf(stdout, "%s, MODE_NORMAL, MODE CHANGED SUCCESSFUlly, new MODE= %d\n",ctime(&timep),gCurMode);
+
+			statechanged = 1;
+
+			//Invoke Socket Thread 's callback function to send notification to Client. 
+			ret = CallBack_NotifyClientOnStateChange();
+			if(ret!=0)
+			{
+				fprintf(stdout, " Notify Client about state change failed \n");
+				statechanged = 0;
+			}
+
+		}
+	}
 
 }
 
@@ -277,19 +215,17 @@ int StateMachine_process(int uinput_fd, gesture_output gest_out,centroid_output 
 
 	gestureHistoryPush(gest_out);
 	checkAndSwitchMode();
-	
-	time(&timep); 
 
+	time(&timep); 
 
 	switch(gCurMode)
 	{
 		case MODE_NORMAL:
 		{
-			
-			
+
 			switch(gest_out.type)
 			{
-							
+
 				case NONE_GESTURE :
 					fprintf(stdout, "%s, MODE_NORMAL, Daemon Received NONE_GESTURE event \n",ctime(&timep));
 					break;
@@ -312,7 +248,7 @@ int StateMachine_process(int uinput_fd, gesture_output gest_out,centroid_output 
 				case TAP_GESTURE :
 					fprintf(stdout, "%s, MODE_NORMAL, Daemon Received TAP_GESTURE event \n",ctime(&timep));
 					event_send_gesture(MASK_TAP_GESTURE,cent_out,uinput_fd);
-								
+
 					break;
 				case TAPHOLD_GESTURE :
 					fprintf(stdout, "%s, MODE_NORMAL, Daemon Received TAPHOLD_GESTURE event \n",ctime(&timep));
@@ -330,7 +266,7 @@ int StateMachine_process(int uinput_fd, gesture_output gest_out,centroid_output 
 			
 					fprintf(stdout, "%s, MODE_NORMAL, Daemon Received Unrecognized	event \n",ctime(&timep));
 					break;
-			
+
 			}
 		break;
 		}
@@ -338,12 +274,10 @@ int StateMachine_process(int uinput_fd, gesture_output gest_out,centroid_output 
 		//If current mode is MODE_VOLUME
 		case MODE_VOLUME:
 		{
-			
-		
-			
+
 			switch(gest_out.type)
 			{
-							
+
 				case NONE_GESTURE :
 					fprintf(stdout, "%s, MODE_VOLUME, Daemon Received NONE_GESTURE event \n",ctime(&timep));
 					break;
@@ -384,7 +318,7 @@ int StateMachine_process(int uinput_fd, gesture_output gest_out,centroid_output 
 			
 					fprintf(stdout, "%s, MODE_VOLUME,Daemon Received Unrecognized	event \n",ctime(&timep));
 					break;
-			
+
 			}
 
 			break;
