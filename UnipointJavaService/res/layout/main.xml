@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+<TextView  
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content" 
+    android:text="@string/hello"
+    />
+    <TextView  
+	
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content" 
+    android:id="@+id/informationtext"
+    android:text=""
+    />
+<Button     
+ 	android:id="@+id/getmodebutton"
+	android:layout_width="fill_parent" 
+    android:layout_height="wrap_content"
+    android:text="GetCurrentMode" ></Button>
+<Button     
+ 	android:id="@+id/changemodebutton"
+	android:layout_width="fill_parent" 
+    android:layout_height="wrap_content"
+    android:text="SwitchToMode_NORMAL" ></Button>
+    
+<Button     
+ 	android:id="@+id/changemodebutton1"
+	android:layout_width="fill_parent" 
+    android:layout_height="wrap_content"
+    android:text="SwitchToMode_VOLUME" ></Button>
+
+<Button     
+ 	android:id="@+id/reconnecttodaemon"
+	android:layout_width="fill_parent" 
+    android:layout_height="wrap_content"
+    android:text=" -- ReConnet To Daemon -- " ></Button>
+    
+</LinearLayout>

@@ -25,21 +25,13 @@
 #include <uinput.h>
 #include <gesture.h>
 
-#define CONFIG_USE_DAVI_ALGORITHM
 
 
 #ifdef CONFIG_USE_DAVI_ALGORITHM
 //include the algorithm
 #include "unipoint.h"
 #include <time.h>
-
-#define MASK_RIGHT_GESTURE	    0x1
-#define MASK_LEFT_GESTURE	    0x2
-#define MASK_DOWN_GESTURE	    0x4
-#define MASK_UP_GESTURE		    0x8
-#define MASK_TAP_GESTURE		    0x10
-#define MASK_TAPHOLD_GESTURE	    0x20
-#define MASK_POINTER_GESTURE     0x40
+#include "statemachine.h"
 
 
 
@@ -54,8 +46,8 @@
 #define UNIPOINT_PRE_PATH "/sys/class/input/"
 
 static char unipoint_device_path[BUF_SIZE];
-static volatile sig_atomic_t do_event_loop = 1;
 static const unsigned int event_handles_max = 10;
+volatile sig_atomic_t do_event_loop = 1;
 
 typedef union {
     void * v;
@@ -230,13 +222,11 @@ static inline int convert_y(int distance)
 
 
 
-static int lastgesture;
-static clock_t last_clock;
 
 /*
 This function is used to send gesture to event hub 
 */
-static inline void event_send_gesture(
+void event_send_gesture(
 		const int gesture_mask,
 		centroid_output cent_out,
 		const int uinput_fd)
@@ -247,13 +237,32 @@ static inline void event_send_gesture(
 
 	switch(gesture_mask)
 	{
+	case MASK_VOLUME_UP:
+		{
+
+			 fprintf(stdout, "uinput event - volume up \n");
+			 uinput_write(uinput_fd, EV_KEY, KEY_VOLUMEUP, 1);
+			 uinput_syn(uinput_fd);
+			  uinput_write(uinput_fd, EV_KEY, KEY_VOLUMEUP, 0);
+
+		break;
+		}
+	case MASK_VOLUME_DOWN:
+		{
+			fprintf(stdout, "uinput event - volume down \n");
+			uinput_write(uinput_fd, EV_KEY, KEY_VOLUMEDOWN, 1);
+			uinput_syn(uinput_fd);
+			uinput_write(uinput_fd, EV_KEY, KEY_VOLUMEDOWN, 0);
+
+
+		break;
+	}
 	case MASK_RIGHT_GESTURE:
 		fprintf(stdout, "uinput event - right\n"); 
 		 uinput_write(uinput_fd, EV_KEY, KEY_RIGHT, 1); //what's the ev_value for KEY_LEFT, need verify ,what 's the meaning of it 
 		 uinput_syn(uinput_fd);
 
 		 uinput_write(uinput_fd, EV_KEY, KEY_RIGHT, 0); //what's the ev_value for KEY_LEFT, need verify ,what 's the meaning of it 
-		lastgesture = gesture_mask;
 		//do right 
 		break;
 	case MASK_LEFT_GESTURE:
@@ -263,7 +272,6 @@ static inline void event_send_gesture(
 
 		 uinput_write(uinput_fd, EV_KEY, KEY_LEFT, 0); //what's the ev_value for KEY_LEFT, need verify ,what 's the meaning of it 
 		//do right 
-		lastgesture = gesture_mask;
 
 		break;
 	case MASK_DOWN_GESTURE:
@@ -272,7 +280,6 @@ static inline void event_send_gesture(
 		 uinput_syn(uinput_fd);
 
 		uinput_write(uinput_fd, EV_KEY, KEY_DOWN, 0); //what's the ev_value for KEY_LEFT, need verify ,what 's the meaning of it 
-		lastgesture = gesture_mask;
 
 		//do right 
 		break;
@@ -280,38 +287,21 @@ static inline void event_send_gesture(
 		fprintf(stdout, "uinput event - up\n"); 
 		 uinput_write(uinput_fd, EV_KEY, KEY_UP, 1); //what's the ev_value for KEY_LEFT, need verify ,what 's the meaning of it 
 		 uinput_syn(uinput_fd);
-		lastgesture = gesture_mask;
 
 		uinput_write(uinput_fd, EV_KEY, KEY_UP, 0); //what's the ev_value for KEY_LEFT, need verify ,what 's the meaning of it 
 			//do right 
 			break;
 	case MASK_TAP_GESTURE:
-		if(lastgesture==MASK_TAP_GESTURE && last_clock!=0)
+
+		if(IsDoubleTap()==1)
 		{
+			uinput_write(uinput_fd, EV_KEY, BTN_MOUSE, 1);
+	        uinput_syn(uinput_fd);
+	        uinput_write(uinput_fd, EV_KEY, BTN_MOUSE, 0);
+	        fprintf(stdout, "uinput event - tap\n");
 
-			clock_t now = clock();
-
-			//LIMIT to 3 SECONDS
-			if((now-last_clock)<3*CLOCKS_PER_SEC)
-			{
-				uinput_write(uinput_fd, EV_KEY, BTN_MOUSE, 1);
-				uinput_syn(uinput_fd);
-				uinput_write(uinput_fd, EV_KEY, BTN_MOUSE, 0);
-				fprintf(stdout, "uinput event - tap\n");
-				//do right
-				lastgesture = 0;
-				last_clock=0;
-			}else
-			{
-				lastgesture = MASK_TAP_GESTURE; //clear lastgesture
-				last_clock = now;
-			}
-
-		}else{
-
-			lastgesture = gesture_mask;
-			last_clock = clock();
 		}
+		// LIRONG : Should we change to ABS event ? or just leave it as left button click ? 
 		break;
 	case MASK_TAPHOLD_GESTURE:
 
@@ -319,7 +309,6 @@ static inline void event_send_gesture(
 		uinput_write(uinput_fd, EV_KEY, BTN_LEFT, 1);
 		uinput_syn(uinput_fd);
 		
-		lastgesture = gesture_mask;
 
 			//do right 
 			break;
@@ -344,7 +333,6 @@ static inline void event_send_gesture(
  		uinput_write(uinput_fd, EV_REL, REL_X, convert_x(rel_x));
 		uinput_write(uinput_fd, EV_REL, REL_Y, convert_y(rel_y));
 		
-		lastgesture = gesture_mask;
 
 		break;
 	default:
@@ -394,7 +382,7 @@ static inline void event_send_gesture
 #ifdef CONFIG_USE_DAVI_ALGORITHM
 
 static long long  count;
-static time_t   timep; 
+
 
 #endif
 static inline int
@@ -552,53 +540,9 @@ event_dispatcher(event_handles * restrict const handles, int uinput_fd, FILE *sa
 				return 0;
 			}
 
-			time(&timep); 
+			
 
-			switch(gest_out.type)
-			{
-				
-				case NONE_GESTURE :
-					fprintf(stdout, "%s, Daemon Received NONE_GESTURE event \n",ctime(&timep));
-					break;
-				case RIGHT_GESTURE :
-					fprintf(stdout, "%s, Daemon Received RIGHT_GESTURE event \n",ctime(&timep));
-					event_send_gesture(MASK_RIGHT_GESTURE,cent_out,uinput_fd);
-					break;
-				case LEFT_GESTURE :
-					fprintf(stdout, "%s, Daemon Received LEFT_GESTURE event \n",ctime(&timep));
-					event_send_gesture(MASK_LEFT_GESTURE,cent_out,uinput_fd);
-					break;
-				case DOWN_GESTURE :
-					fprintf(stdout, "%s, Daemon Received DOWN_GESTURE event \n",ctime(&timep));
-					event_send_gesture(MASK_DOWN_GESTURE,cent_out,uinput_fd);
-					break;
-				case UP_GESTURE :
-					fprintf(stdout, "%s, Daemon Received UP_GESTURE event \n",ctime(&timep));
-					event_send_gesture(MASK_UP_GESTURE,cent_out,uinput_fd);
-					break;
-				case TAP_GESTURE :
-					fprintf(stdout, "%s, Daemon Received TAP_GESTURE event \n",ctime(&timep));
-					event_send_gesture(MASK_TAP_GESTURE,cent_out,uinput_fd);
-					
-					break;
-				case TAPHOLD_GESTURE :
-					fprintf(stdout, "%s, Daemon Received TAPHOLD_GESTURE event \n",ctime(&timep));
-					event_send_gesture(MASK_TAPHOLD_GESTURE,cent_out,uinput_fd);
-					break;
-				case POINTER_GESTURE :
-					fprintf(stdout, "%s, Daemon Received POINTER_GESTURE event \n",ctime(&timep));
-					event_send_gesture(MASK_POINTER_GESTURE,cent_out,uinput_fd);
-					break;
-				case TIMEDOUT_GESTURE :
-					fprintf(stdout, "%s, Daemon Received TIMEDOUT_GESTURE event \n",ctime(&timep));
-					event_send_gesture(MASK_POINTER_GESTURE,cent_out,uinput_fd);
-					break;
-				default:
-
-					 fprintf(stdout, "%s, Daemon Received Unrecognized  event \n",ctime(&timep));
-					 break;
-
-			}
+			StateMachine_process(uinput_fd,gest_out,cent_out);
 			
 	}//Part for Davi's algorithm
 #else 
@@ -736,7 +680,7 @@ int event_loop(char *op, char *fname)
 #endif 
 
 
-    signal(SIGINT, handler);
+   // signal(SIGINT, handler);
     while(do_event_loop)
         error = event_dispatcher(handles, uinput_fd, sample_fd, op);
 

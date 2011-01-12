@@ -9,7 +9,9 @@ uinput.c \
 ballistics.c \
 initialization.c \
 process.c \
-recognizer.c 
+recognizer.c \
+statemachine.c \
+socketserver.c
  
 
 LOCAL_CFLAGS := \

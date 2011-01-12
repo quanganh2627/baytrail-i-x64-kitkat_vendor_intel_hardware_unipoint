@@ -160,7 +160,7 @@ int uinput_gen_setup(int *uinput_fd, FILE **sample_fd, char *op, char *fname)
 	static int rel_axes[] = { REL_X, REL_Y };
 #ifdef CONFIG_USE_DAVI_ALGORITHM
 	
-		static int btn_axes[] = { BTN_MOUSE,KEY_UP,KEY_RIGHT,KEY_LEFT,KEY_DOWN };
+		static int btn_axes[] = { BTN_MOUSE,KEY_UP,KEY_RIGHT,KEY_LEFT,KEY_DOWN,KEY_VOLUMEUP,KEY_VOLUMEDOWN };
 #else
 		static int btn_axes[] = { BTN_MOUSE };
 #endif

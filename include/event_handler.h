@@ -10,6 +10,7 @@
 extern "C" {
 #endif
 
+#define CONFIG_USE_DAVI_ALGORITHM
 /*! Print events prior to output.
  */
 #define OUTPUT_DEBUG 0
