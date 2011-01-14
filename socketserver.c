@@ -50,7 +50,7 @@ int makeAddr(const char* name, struct sockaddr_un* pAddr, socklen_t* pSockLen)
 //Init function is used to set up SocketServer for internal IPC 
 void* socketthread(void* cnt)
 {
-    int  s2, t, len;
+    int  s2, t, len, val=1;
     struct sockaddr_un local, remote;
     char str[100] = {0};
 	char sendstr[100] = {0};
@@ -69,6 +69,7 @@ void* socketthread(void* cnt)
 	   }
 
 	 printf("SERVER %s\n", sockAddr.sun_path+1);
+	 setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val)); 
      if (bind(fd, (const struct sockaddr*) &sockAddr, sockLen) < 0) {
             perror("Daemon_Server: server bind() failure");
            goto bail;

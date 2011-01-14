@@ -3,8 +3,8 @@
 #include <jni.h>
 #define TAG "INTEL_JNI_TEST"
 #include <utils/Log.h>
-#include "intel_aidltest_jni_JNIClient.h"
 #include "socketclient_interface.h"
+#include "intel_aidltest_jni_JNIClient.h"
 #include <pthread.h>
 #include <sys/time.h>
 #include "jnicallback_interface.h"
@@ -36,7 +36,11 @@ static int getcurrentmode()
 	int moderet = -1;
 	LOGW("JNI, IN native_getCurrentMode");
 
-
+    if(IsClientConnected()!=1)
+    {
+  	  LOGW("JNI, getcurrentmode not connected ");
+		return -1;
+	}
 	char response[1024] = {0};
 	//Test GET MODE 
 	moderet = SendCommandAndReceive(CMD_GETMODE,response,sizeof(response));
@@ -63,7 +67,13 @@ static jint setmode(jint newmode)
 		char cmdbuf[1024] = {0};
 		int ret = 0;
 		LOGW("Inside native_SetMode, the newmode value is %d",newmode);
-	
+
+	  if(IsClientConnected()!=1)
+    {
+  	  LOGW("JNI, setmode not connected ");
+		return -1;
+	}
+
 		if(!isValidMode(newmode))
 		{
 			LOGW("Inside native_SetMode, INVLAID MODE to SET return");
@@ -301,6 +311,33 @@ void JNI_OnUnload(JavaVM* vm,void* reserved){
 
 	
 }
+
+
+/*
+ * Class:     intel_aidltest_jni_JNIClient
+ * Method:    checkConnection
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_intel_aidltest_jni_JNIClient_checkConnection
+  (JNIEnv *env, jclass class)
+{
+	
+	return IsClientConnected();
+}
+
+/*
+ * Class:     intel_aidltest_jni_JNIClient
+ * Method:    ReConnectServer
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_intel_aidltest_jni_JNIClient_ReConnectServer
+  (JNIEnv *env, jclass class)
+{
+
+	return reConnect();	
+
+}
+
 
 
 

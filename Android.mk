@@ -31,5 +31,10 @@ LOCAL_C_INCLUDES := \
 LOCAL_MODULE := unipoint-daemon
 include $(BUILD_EXECUTABLE)
 
-# Build the SensorsTest app
-include $(LOCAL_PATH)/UnipointDemo/Android.mk
+include $(call all-makefiles-under,$(LOCAL_PATH))
+
+# Build the demo app
+#include $(LOCAL_PATH)/UnipointDemo/Android.mk
+
+# Build the Unipoint Java service
+#include $(LOCAL_PATH)/UnipointJavaService/Android.mk

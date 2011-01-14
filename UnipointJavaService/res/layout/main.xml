@@ -14,29 +14,28 @@
     android:layout_width="fill_parent" 
     android:layout_height="wrap_content" 
     android:id="@+id/informationtext"
-    android:text=""
     />
 <Button     
  	android:id="@+id/getmodebutton"
 	android:layout_width="fill_parent" 
     android:layout_height="wrap_content"
-    android:text="GetCurrentMode" ></Button>
+    android:text="@string/getcurrentmode" ></Button>
 <Button     
  	android:id="@+id/changemodebutton"
 	android:layout_width="fill_parent" 
     android:layout_height="wrap_content"
-    android:text="SwitchToMode_NORMAL" ></Button>
+    android:text="@string/switchtomode_normal" ></Button>
     
 <Button     
  	android:id="@+id/changemodebutton1"
 	android:layout_width="fill_parent" 
     android:layout_height="wrap_content"
-    android:text="SwitchToMode_VOLUME" ></Button>
+    android:text="@string/switchtomode_volume" ></Button>
 
 <Button     
  	android:id="@+id/reconnecttodaemon"
 	android:layout_width="fill_parent" 
     android:layout_height="wrap_content"
-    android:text=" -- ReConnet To Daemon -- " ></Button>
+    android:text="@string/restartservice" ></Button>
     
 </LinearLayout>

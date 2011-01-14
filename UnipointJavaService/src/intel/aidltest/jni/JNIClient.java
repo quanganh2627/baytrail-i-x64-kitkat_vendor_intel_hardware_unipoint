@@ -12,6 +12,8 @@ import intel.aidltest.service.UnipointService;
 public final class JNIClient {
 	public static final String TAG = "JNICLient"; 
 	public static native int getCurrentMode();
+	public static native int checkConnection();
+	public static native int ReConnectServer();
 	public static native int SetMode(int mode);
 	public static final String SERVICEACTION = "intel.aidltest.service.UnipointService";
 	public static Context context ;

@@ -38,10 +38,7 @@ public class Unipoint_ServiceActivity extends Activity {
 	private Button mreconnecttodaemon;
 	
 	
-	static {
-		System.loadLibrary("Unipoint");
-	}
-	
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -49,7 +46,7 @@ public class Unipoint_ServiceActivity extends Activity {
         setContentView(R.layout.main);
         
         self = this;
-        client = new JNIClient(this);
+       
         //Start Service
         
         Intent m = new Intent(SERVICEACTION);
@@ -69,7 +66,7 @@ public class Unipoint_ServiceActivity extends Activity {
 		mreconnecttodaemon = (Button)this.findViewById(R.id.reconnecttodaemon);
 		mreconnecttodaemon.setOnClickListener(new OnClickListener(){
 
-			@Override
+			
 			public void onClick(View arg0) {
 			     
 					Intent b = new Intent(SERVICEACTION);
@@ -92,7 +89,7 @@ public class Unipoint_ServiceActivity extends Activity {
 		
 		mShowmodeButton.setOnClickListener(new OnClickListener(){
 
-			@Override
+			
 			public void onClick(View v) {
 				
 			
@@ -120,7 +117,7 @@ public class Unipoint_ServiceActivity extends Activity {
 		
 		mchangemodebutton0.setOnClickListener(new OnClickListener(){
 
-			@Override
+			
 			public void onClick(View v) {
 				
 			
@@ -152,7 +149,7 @@ public class Unipoint_ServiceActivity extends Activity {
 		
 		changemodebutton1.setOnClickListener(new OnClickListener(){
 
-			@Override
+			
 			public void onClick(View v) {
 				
 			

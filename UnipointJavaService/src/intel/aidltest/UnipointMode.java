@@ -9,13 +9,13 @@ public class UnipointMode implements Parcelable {
 	public static int MODE_VOLUME_CONTROL = 2;
 	
 	public int mMode;
-	@Override
+	
 	public int describeContents() {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
-	@Override
+	
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeInt(mMode);
 

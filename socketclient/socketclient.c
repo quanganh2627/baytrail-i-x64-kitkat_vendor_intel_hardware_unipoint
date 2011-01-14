@@ -25,6 +25,9 @@ int makeAddr(const char* name, struct sockaddr_un* pAddr, socklen_t* pSockLen)
 
 
 static int clientsocket;
+static int connected = 0; 
+
+
 
 
 //This function is used to initialization the socket 
@@ -53,7 +56,12 @@ static int init_clientsocket()
 		   perror("connect to server failed ");
 		   return -1;
 	   }
-	
+
+
+	   //the connection is established 
+	   connected = 1;
+
+	   
 	   printf("Connected.\n");
 
 	   return 0;
@@ -70,6 +78,8 @@ static int close_clientsocket()
 		clientsocket = -1;
 
 	}
+	connected = 0;
+
 
 	return 0;
 
@@ -140,6 +150,8 @@ static int SendCommandAndReceive(const char* command, char* response ,int respon
 
 		}else{
 			printf("Server closed connection\n");
+
+			connected = 0;
 	        return -1;
 	    }
 	}

@@ -4,6 +4,7 @@ import intel.aidltest.UnipointMode;
 import intel.aidltest.Unipoint_ServiceActivity;
 import intel.aidltest.aidlsrc.IUnipointService;
 import intel.aidltest.jni.JNIClient;
+import android.app.Activity;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -21,8 +22,12 @@ public class UnipointService extends Service{
 	private static int mcurrentmode;
 	private static Context self;
 	private NotificationDialog mNotificationDialog;
+	private boolean threadDisable;
+	private JNIClient client;
 
-
+	static {
+		System.loadLibrary("Unipoint");
+	}
 
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -38,6 +43,7 @@ public class UnipointService extends Service{
 		
 		Log.v(TAG,"Unipoint Service Stoped");
 		super.onDestroy();
+		this.threadDisable = true;
 	}
 
 
@@ -53,6 +59,48 @@ public class UnipointService extends Service{
 		mcurrentmode = UnipointMode.MODE_NORMAL;
 		
 		Log.v(TAG,"Unipoint Service Started");
+		 client = new JNIClient(this);
+	
+		
+		new Thread(new Runnable() {
+			
+				public void run() {
+				while (!threadDisable) {
+				try {
+					Thread.sleep(60000);
+					
+					checkConnection();
+					
+				} catch (InterruptedException e) {
+				}
+			}
+	
+			}
+	
+		}).start();
+		
+		
+	}
+
+
+
+	protected void checkConnection() {
+		
+		try
+		{
+			int mode = JNIClient.checkConnection();
+			if(mode<0)
+			{
+				Log.v("DEBUG","Daemon not connected, Needs tetry connection ");
+				
+			}
+			
+		}catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+		
 	}
 
 
@@ -120,7 +168,7 @@ public class UnipointService extends Service{
 	//This function is called by 3rd party Applications 
 	public class UnipointSerivceimpl extends IUnipointService.Stub{
 
-		@Override
+		
 		public int getCurrentMode() throws RemoteException {
 			// TODO Auto-generated method stub
 		
@@ -149,7 +197,7 @@ public class UnipointService extends Service{
 		
 		
 		//This function is called by 3rd party Applications 
-		@Override
+		
 		public void setMode(int mode) throws RemoteException {
 		
 			Log.v(TAG,"Got setMode request");

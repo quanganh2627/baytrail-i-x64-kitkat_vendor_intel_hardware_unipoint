@@ -67,11 +67,11 @@ public class NotificationDialog {
 						WindowManager.LayoutParams.TYPE_TOAST,
 						WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
 						| WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-						PixelFormat.TRANSLUCENT);
+						PixelFormat.OPAQUE);
 				
-				lp.gravity=Gravity.TOP;
-				lp.x = 0;
-				lp.y = 0;
+				lp.gravity=Gravity.BOTTOM;
+//				lp.x = 0;
+//				lp.y = 0;
 				
 
 				try{

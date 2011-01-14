@@ -32,10 +32,29 @@ pthread_cond_t ret_found_cond;
 
 static int retfromDaemon = INITIAL_RET_VALUE; //indicate the response 
 
+int connected = 0;
 
 
 void* socketReceivethread(void* cnt);
 
+//Get the connection status
+int IsClientConnected()
+{
+	return connected;
+
+}
+
+//Reconnect the Server 
+int reConnect()
+{
+	if(!connected){
+		return init_clientsocket();
+
+	}else {
+		return 0;
+	}
+
+}
 
 
 int makeAddr(const char* name, struct sockaddr_un* pAddr, socklen_t* pSockLen)
@@ -73,32 +92,13 @@ int init_clientsocket()
 {
 		int t, len;
 	   struct sockaddr_un remote;
-	    pthread_attr_t attr;
+	  
 		int ret = -1;
 	   int i = 0;
+	   pthread_attr_t attr;
+	   int retrycounts = 200;
 
 	   	   /* Initialize mutex and condition variable objects */
-	   ret = pthread_mutex_init(&ret_mutex, NULL);
-	   if(ret!=0)
-	   {
-		   perror("pthread_mutex_init() error");
-		   LOGW("pthread_mutex_init() error");
-
-	   }else
-	   	{
-		   LOGW("pthread_mutex_init() SUCCESS");
-
-	   }
-	   ret = pthread_cond_init (&ret_found_cond, NULL);
-	   if(ret!=0)
-	   {
-		   perror("pthread_cond_init() error");
-		   LOGW("pthread_cond_init() error");
-
-	   }else
-	   	{
-		   LOGW("pthread_cond_init() SUCCESS");
-	   }
 
 	   
 	   if ((connectedsocket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
@@ -115,15 +115,54 @@ int init_clientsocket()
 
 	   }
 	 
-	   if (connect(connectedsocket, (struct sockaddr *)&remote, len) == -1) {
-		   LOGW("connect to server failed ");
-		   return -1;
-	   }
-	
-	   LOGW("Connected.\n");
+	   while(!connected && retrycounts >=0){
+	   
+		   if (connect(connectedsocket, (struct sockaddr *)&remote, len) == -1) {
+			   LOGW("connect to server failed ");
 
+			   sleep(10);
+			   retrycounts --;
+			   continue;
+		   }
+		
+		   LOGW("Connected.\n");
+
+		   connected = 1;
+
+		   
+	  }
+
+
+	 if(!connected)
+	 {
+
+		LOGW("Fail To Connect \n");
+
+		return -1;
+	 }
 	   //Create Receive Threads 
 
+	   ret = pthread_mutex_init(&ret_mutex, NULL);
+	   if(ret!=0)
+	  	   {
+			   perror("pthread_mutex_init() error");
+			   LOGW("pthread_mutex_init() error");
+		   
+		   }else
+			{
+			   LOGW("pthread_mutex_init() SUCCESS");
+		   
+		   }
+		   ret = pthread_cond_init (&ret_found_cond, NULL);
+		   if(ret!=0)
+		   {
+			   perror("pthread_cond_init() error");
+			   LOGW("pthread_cond_init() error");
+		   
+		   }else
+			{
+			   LOGW("pthread_cond_init() SUCCESS");
+		   }
 
 
 	  
@@ -160,7 +199,7 @@ void* socketReceivethread(void* cnt)
 
 	while(loop) {
 
-		
+		//Add Mechanism to wack up from recv system call ? 
 		recvlen = recv(connectedsocket, buf, RECEIVE_MAX_BUFFER, 0);
 		
 		if(recvlen>0)
@@ -212,6 +251,9 @@ void* socketReceivethread(void* cnt)
 
 			}else{
 				LOGW("Server closed connection\n");
+
+				close_clientsocket();
+				connected = 0;
 		        return (void*)-1;
 		    }
 
@@ -269,7 +311,6 @@ int close_clientsocket()
 	//destroy mutex and conditional variable 
 	 pthread_mutex_destroy(&ret_mutex);
 	 pthread_cond_destroy(&ret_found_cond);
-	 pthread_exit(NULL);
 
 	
 
@@ -298,7 +339,11 @@ int SendCommandAndReceive(const char* command, char* response ,int responsebufsi
 	if(-1==connectedsocket)
 	{
 		LOGW("The clientsocket is not valid \n");
-		return -1;
+
+
+		init_clientsocket();
+
+		
 	}
 	
 	//strncpy(thiscmd.cmd,command,strlen(command));
@@ -330,7 +375,6 @@ int SendCommandAndReceive(const char* command, char* response ,int responsebufsi
 
 
 
-	LOGW("send string %s success,total bytes send %d\n",command,sendlen);
 
 	
 	if (retfromDaemon == INITIAL_RET_VALUE) {

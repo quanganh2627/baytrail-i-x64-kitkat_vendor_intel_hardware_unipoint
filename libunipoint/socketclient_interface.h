@@ -16,7 +16,11 @@ int close_clientsocket();
 int SendCommandAndReceive(const char* command, char* response ,int responsebufsize);
 int ProcessResponse(char* cmdrequest, char* response);
 
+//Get the connection status
+int IsClientConnected();
 
+//Reconnect the Server 
+int reConnect();
 
 
 #endif

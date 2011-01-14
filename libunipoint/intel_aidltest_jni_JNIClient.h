@@ -17,6 +17,22 @@ JNIEXPORT jint JNICALL Java_intel_aidltest_jni_JNIClient_getCurrentMode
 
 /*
  * Class:     intel_aidltest_jni_JNIClient
+ * Method:    checkConnection
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_intel_aidltest_jni_JNIClient_checkConnection
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     intel_aidltest_jni_JNIClient
+ * Method:    ReConnectServer
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_intel_aidltest_jni_JNIClient_ReConnectServer
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     intel_aidltest_jni_JNIClient
  * Method:    SetMode
  * Signature: (I)I
  */
