@@ -21,14 +21,16 @@ static Command gCmdqueue[SM_MAX_CMDS] = {0};
 #define INITIAL_RET_VALUE -99
 #define MAX_SERIAL_NO 200000 
 static int connectedsocket;
-static   pthread_t clientsocketthread;;
+static   pthread_t clientsocketthread;
 static int gCmdQuqueIndex;
 //Callback from JNI layer 
-
+static time_t   timep_client;
 static char* currentcmd = NULL;
 
 pthread_mutex_t ret_mutex;
 pthread_cond_t ret_found_cond;
+
+
 
 static int retfromDaemon = INITIAL_RET_VALUE; //indicate the response 
 
@@ -74,12 +76,10 @@ int makeAddr(const char* name, struct sockaddr_un* pAddr, socklen_t* pSockLen)
 // insert raw input to history for current touch engagement
 void cmdqueuePush(const Command cmd)
 {
-	
 	if(gCmdQuqueIndex == SM_MAX_CMDS){
 			gCmdQuqueIndex = 0;
-			
 	}
-	gCmdqueue[gCmdQuqueIndex] = cmd; // does this copy 
+	gCmdqueue[gCmdQuqueIndex] = cmd; // does this copy
 	gCmdQuqueIndex++;
 
 }
@@ -87,91 +87,40 @@ void cmdqueuePush(const Command cmd)
 
 
 
-//This function is used to initialization the socket 
+//This function is used to initialization the socket
 int init_clientsocket()
 {
 		int t, len;
 	   struct sockaddr_un remote;
-	  
 		int ret = -1;
 	   int i = 0;
 	   pthread_attr_t attr;
-	   int retrycounts = 200;
-
-	   	   /* Initialize mutex and condition variable objects */
-
-	   
-	   if ((connectedsocket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
-		   perror("socket");
-		  return -1;
-	   }
-	
-	   LOGW("Trying to connect...\n");
-	
-	   if (makeAddr("unipointserver", &remote, &len) < 0)
-	   {
-		LOGW("MakeAddr for unitpoint server failed\n");
-	     return -1;
-
-	   }
-	 
-	   while(!connected && retrycounts >=0){
-	   
-		   if (connect(connectedsocket, (struct sockaddr *)&remote, len) == -1) {
-			   LOGW("connect to server failed ");
-
-			   sleep(10);
-			   retrycounts --;
-			   continue;
-		   }
-		
-		   LOGW("Connected.\n");
-
-		   connected = 1;
-
-		   
-	  }
-
-
-	 if(!connected)
-	 {
-
-		LOGW("Fail To Connect \n");
-
-		return -1;
-	 }
-	   //Create Receive Threads 
-
-	   ret = pthread_mutex_init(&ret_mutex, NULL);
-	   if(ret!=0)
-	  	   {
-			   perror("pthread_mutex_init() error");
-			   LOGW("pthread_mutex_init() error");
-		   
-		   }else
-			{
-			   LOGW("pthread_mutex_init() SUCCESS");
-		   
-		   }
-		   ret = pthread_cond_init (&ret_found_cond, NULL);
-		   if(ret!=0)
-		   {
-			   perror("pthread_cond_init() error");
-			   LOGW("pthread_cond_init() error");
-		   
-		   }else
-			{
-			   LOGW("pthread_cond_init() SUCCESS");
-		   }
-
-
+	   int retrycounts = 2000;
 	  
-	   pthread_attr_init(&attr);
-	   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-		
+	ret = pthread_mutex_init(&ret_mutex, NULL);
+	  if(ret!=0)
+	  {
+			  perror("libUnipoint:pthread_mutex_init() error");
+			  LOGW("libUnipoint:pthread_mutex_init() error");
+	 }else
+	 {
+			  LOGW("libUnipoint:pthread_mutex_init() SUCCESS");
+	 }
+	 ret = pthread_cond_init (&ret_found_cond, NULL);
+	 if(ret!=0){
 
-	    if(pthread_create(&clientsocketthread, &attr, (void *)socketReceivethread, NULL) == 0){
-			LOGV("socketReceivethread thread create OK!\n");
+	 perror("libUnipoint: pthread_cond_init() error");
+	 LOGW("libUnipoint: pthread_cond_init() error");
+	}else{
+			  LOGW("libUnipoint:pthread_cond_init() SUCCESS");
+	}
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+
+	  //Create Receive Thread 
+	  if(pthread_create(&clientsocketthread, &attr, (void *)socketReceivethread, NULL) == 0){
+			LOGV("libUnipoint: socketReceivethread thread create OK!\n");
 	    }
 
 
@@ -188,23 +137,51 @@ void* socketReceivethread(void* cnt)
 	int recvlen ;
 	char buf[RECEIVE_MAX_BUFFER];
 	int newmode;
-	
-	if(-1==connectedsocket)
-	{
-			LOGW("The clientsocket is not valid \n");
-			return (void*)-1;
+	int retrycounts = 2000;
+	int t, len;
+	struct sockaddr_un remote;
+	if ((connectedsocket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+		  perror("socket");
+		  return (void*)-1;
 	}
 
-	
+	LOGW("libUnipoint: Trying to connect...\n");
+	if (makeAddr("unipointserver", &remote, &len) < 0)
+	  {
+	   LOGW("libUnipoint: MakeAddr for unitpoint server failed\n");
+		return (void*)-1;
+
+	  }
+
+	while(!connected && retrycounts >=0){
+
+		  LOGW("libUnipoint: Try to Conntect To Server , Current retrycount = %d", retrycounts);
+		  if (connect(connectedsocket, (struct sockaddr *)&remote, len) == -1) {
+			  time(&timep_client); 
+			LOGW("libUnipoint: connect to server failed ,go to sleep for 3 seconds,curent time %s \n",ctime(&timep_client));
+
+			  sleep(3);
+			  retrycounts --;
+			  continue;
+		  }
+		  LOGW("libUnipoint: Unipointdaemon Connected.\n");
+
+		  connected = 1;
+	}
+
+
+    if(connected !=1){
+		LOGW("LibUnipoint: Timeout , Daemon Not Connected, fail and return \n");
+		return (void*)-1;
+	}
+
 
 	while(loop) {
 
 		//Add Mechanism to wack up from recv system call ? 
 		recvlen = recv(connectedsocket, buf, RECEIVE_MAX_BUFFER, 0);
-		
 		if(recvlen>0)
 		{
-		
 			LOGW("Successfully received response \n");
 			buf[recvlen] = '\0';
 			LOGW("Got returned response : %s \n", buf);
@@ -215,34 +192,16 @@ void* socketReceivethread(void* cnt)
 
 				//The command is NOTIFY CHANGE 
 				newmode = atoi(buf+strlen(RET_CMD_NOTIFYCHANGE));
-				
 				LOGW("Got Response, current mode is %d \n",newmode);
-
-				
 				callbackModeSwitchRequest(newmode);
-				
 
-			}else { 
-
-				LOGW("socketReceivethread: pthread_mutex_lock");
+			}else {
 
 				pthread_mutex_lock(&ret_mutex);
-
-
 				ProcessResponse( currentcmd, buf);
-
-				LOGW("socketReceivethread: pthread_cond_signal");
-
 				pthread_cond_signal(&ret_found_cond);
-
-
-				LOGW("socketReceivethread: pthread_mutex_unlock");
 				pthread_mutex_unlock(&ret_mutex);
-
-				LOGW("socketReceivethread: DONE");
-
 			}
-			
 		}else {
 
 		  	if (recvlen < 0) 
@@ -254,7 +213,7 @@ void* socketReceivethread(void* cnt)
 
 				close_clientsocket();
 				connected = 0;
-		        return (void*)-1;
+				return (void*)-1;
 		    }
 
 				pthread_mutex_lock(&ret_mutex);
@@ -272,7 +231,6 @@ void* socketReceivethread(void* cnt)
 
 				LOGW("recvlen <= 0 socketReceivethread: DONE");
 
-				
 		}
 	}
 
@@ -286,20 +244,14 @@ int close_clientsocket()
 {
 	void* result;
 
-	
 	//Question , how to exit recv system call ?
 	loop  = 0;
 
 
-	//once uncomment, there is segmentation failure, why ?
+
 	if(pthread_join(clientsocketthread, &result) == 0){
 		LOGV("thread eventprocessid = %d, result = %d\n", clientsocketthread, (int)result);
 	}
-
-		 
-
-	//pthread_cancel(clientsocketthread);
-
 
 	if(connectedsocket!=-1){
 		close(connectedsocket);
@@ -307,12 +259,12 @@ int close_clientsocket()
 
 	}
 
+	connected = 0;
 
 	//destroy mutex and conditional variable 
 	 pthread_mutex_destroy(&ret_mutex);
 	 pthread_cond_destroy(&ret_found_cond);
 
-	
 
 	return 0;
 
@@ -331,21 +283,17 @@ int SendCommandAndReceive(const char* command, char* response ,int responsebufsi
 	int recvlen = 0;
 	char buf[RECEIVE_MAX_BUFFER];
 	int temp = 0;
-	time_t T;                                                                     
-    struct timespec t;     
-  
+	time_t T;
+	struct timespec t;
 	Command thiscmd = {0};
-	
+
+
 	if(-1==connectedsocket)
 	{
 		LOGW("The clientsocket is not valid \n");
 
-
-		init_clientsocket();
-
-		
+		return -1;
 	}
-	
 	//strncpy(thiscmd.cmd,command,strlen(command));
 	//gSerialno++;
 	//thiscmd.serialno = gSerialno;
@@ -365,7 +313,6 @@ int SendCommandAndReceive(const char* command, char* response ,int responsebufsi
 
 	//Start to send command 
 	sendlen = send(connectedsocket, command, strlen(command), 0);
-	
 	if ( sendlen == -1) {
 	      LOGW("send failed ");
 	      return -1;
@@ -373,53 +320,37 @@ int SendCommandAndReceive(const char* command, char* response ,int responsebufsi
 
 	LOGW("send string %s success,total bytes send %d\n",command,sendlen);
 
-
-
-
-	
 	if (retfromDaemon == INITIAL_RET_VALUE) {
 
       LOGW("Start to waiting for results from daemon, pthread_cond_wait");
-	  
 	  pthread_cond_wait(&ret_found_cond, &ret_mutex);
 
 
 	  //When we are here , there should be return value for this command .
 
-	 
 /*
 
-	  time(&T);                                                                     
-	  t.tv_sec = T + 20;                                                             
-	  LOGW("starting timedwait at %s", ctime(&T));  
-	  
+	  time(&T);
+	t.tv_sec = T + 20;
+	LOGW("starting timedwait at %s", ctime(&T));  
 	  if (pthread_cond_timedwait(&ret_found_cond, &ret_mutex, &t) != 0)  
 	  {
-	    if (errno == EAGAIN)                                                        
-	       LOGV("TIME OUT ");                                             
-	    else {                                                                      
-	      LOGW("pthread_cond_timedwait() error no %d  ",errno);                                 
-	                                                                   
+	    if (errno == EAGAIN)
+		LOGV("TIME OUT ");
+	else {
 	    }    
-
 		perror("pthread_cond_timedwait Error");
 	  }
 	*/  
 	  LOGW("Got response value %d",retfromDaemon);
-	
-	  
-  
 		
 	}else
 	{
 		 LOGW("retfromDaemon already retruned , value is %d",retfromDaemon);
 	}
 
-	
 	pthread_mutex_unlock(&ret_mutex);
 //	pthread_exit(NULL);
-
-	
 
 	return retfromDaemon;
 }
@@ -454,8 +385,6 @@ int ProcessResponse(char* cmdrequest, char* response)
 			LOGW("ProcessResponse: Got Response, current mode is %d \n",ret);
 
 			goto end;
-
-			
 		}if(strncmp(cmdrequest,CMD_SETMODE,strlen(CMD_SETMODE)) ==0 )
 		{
 
@@ -463,9 +392,7 @@ int ProcessResponse(char* cmdrequest, char* response)
 			LOGW("ProcessResponse: Got Response, Set Mode Successfully\n");
 			ret = 0;
 			goto end;
-			
 		}
-		
 	}else if(strncmp(response,RET_FAILURE,strlen(RET_FAILURE)) ==0)
 	{
 
@@ -473,7 +400,6 @@ int ProcessResponse(char* cmdrequest, char* response)
 
 		ret = -1;
 		goto end;
-		
 
 	}else {
 
