@@ -7,44 +7,37 @@ public class UnipointMode implements Parcelable {
 
 	public static int MODE_NORMAL = 1;
 	public static int MODE_VOLUME_CONTROL = 2;
-	
+
 	public int mMode;
-	
+
 	public int describeContents() {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
-	
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeInt(mMode);
 
-		
 	}
-	
-	
-    public static final Parcelable.Creator<UnipointMode> CREATOR = new Parcelable.Creator<UnipointMode>() {
+
+	public static final Parcelable.Creator<UnipointMode> CREATOR = new Parcelable.Creator<UnipointMode>() {
 
 		public UnipointMode createFromParcel(Parcel in) {
-		    return new UnipointMode(in);
-		}
-	
-		public UnipointMode[] newArray(int size) {
-		    return new UnipointMode[size];
+			return new UnipointMode(in);
 		}
 
-    };
+		public UnipointMode[] newArray(int size) {
+			return new UnipointMode[size];
+		}
+
+	};
 
 	private UnipointMode(Parcel in) {
-			mMode = in.readInt();
+		mMode = in.readInt();
 	}
 
 	public UnipointMode() {
-		
-	}
 
-	
-	
-	
+	}
 
 }

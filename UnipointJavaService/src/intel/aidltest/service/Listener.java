@@ -1,6 +1,5 @@
 package intel.aidltest.service;
 
-
 import intel.aidltest.Unipoint_ServiceActivity;
 
 import java.util.Date;
@@ -36,53 +35,41 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+public class Listener extends BroadcastReceiver {
 
-
-public class Listener extends BroadcastReceiver{
-	
 	private Context context;
-	
 
 	private static final String TAG = "Unipoint.onBootListener";
 	private static final String BOOT_COMPLETED_ACTION = "android.intent.action.BOOT_COMPLETED";
-	
-	
+
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		
-		try{
+
+		try {
 			this.context = context;
-	
-			if(Unipoint_ServiceActivity.bDEBUG)
-				Log.v(TAG,"======onReceive=========");
-			//Call Received 
-			if(intent.getAction().equals(BOOT_COMPLETED_ACTION))
-			{
+
+			if (Unipoint_ServiceActivity.bDEBUG)
+				Log.v(TAG, "======onReceive=========");
+			// Call Received
+			if (intent.getAction().equals(BOOT_COMPLETED_ACTION)) {
 				StartUnipointNotificationService(intent);
-			
+
 			}
-		}catch(Exception e)
-		{
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 	}
 
-
-	
-	
-	//Start Unipoint Notification Service 
+	// Start Unipoint Notification Service
 	private void StartUnipointNotificationService(Intent intent) {
-		
-	    Intent b = new Intent(Unipoint_ServiceActivity.SERVICEACTION);
-   
-	    if(Unipoint_ServiceActivity.bDEBUG)
-	    	Log.v("DEBUG","Call Service function ");
+
+		Intent b = new Intent(Unipoint_ServiceActivity.SERVICEACTION);
+
+		if (Unipoint_ServiceActivity.bDEBUG)
+			Log.v("DEBUG", "Call Service function ");
 		context.startService(b);
 
-		
 	}
 
-	
-	
 }

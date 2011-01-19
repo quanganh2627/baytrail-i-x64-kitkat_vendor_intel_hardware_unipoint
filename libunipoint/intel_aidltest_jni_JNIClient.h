@@ -7,37 +7,37 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/*
- * Class:     intel_aidltest_jni_JNIClient
- * Method:    getCurrentMode
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_intel_aidltest_jni_JNIClient_getCurrentMode
-  (JNIEnv *, jclass);
+    /*
+     * Class:     intel_aidltest_jni_JNIClient
+     * Method:    getCurrentMode
+     * Signature: ()I
+     */
+    JNIEXPORT jint JNICALL Java_intel_aidltest_jni_JNIClient_getCurrentMode
+    (JNIEnv *, jclass);
 
-/*
- * Class:     intel_aidltest_jni_JNIClient
- * Method:    checkConnection
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_intel_aidltest_jni_JNIClient_checkConnection
-  (JNIEnv *, jclass);
+    /*
+     * Class:     intel_aidltest_jni_JNIClient
+     * Method:    checkConnection
+     * Signature: ()I
+     */
+    JNIEXPORT jint JNICALL Java_intel_aidltest_jni_JNIClient_checkConnection
+    (JNIEnv *, jclass);
 
-/*
- * Class:     intel_aidltest_jni_JNIClient
- * Method:    ReConnectServer
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_intel_aidltest_jni_JNIClient_ReConnectServer
-  (JNIEnv *, jclass);
+    /*
+     * Class:     intel_aidltest_jni_JNIClient
+     * Method:    ReConnectServer
+     * Signature: ()I
+     */
+    JNIEXPORT jint JNICALL Java_intel_aidltest_jni_JNIClient_ReConnectServer
+    (JNIEnv *, jclass);
 
-/*
- * Class:     intel_aidltest_jni_JNIClient
- * Method:    SetMode
- * Signature: (I)I
- */
-JNIEXPORT jint JNICALL Java_intel_aidltest_jni_JNIClient_SetMode
-  (JNIEnv *, jclass, jint);
+    /*
+     * Class:     intel_aidltest_jni_JNIClient
+     * Method:    SetMode
+     * Signature: (I)I
+     */
+    JNIEXPORT jint JNICALL Java_intel_aidltest_jni_JNIClient_SetMode
+    (JNIEnv *, jclass, jint);
 
 #ifdef __cplusplus
 }

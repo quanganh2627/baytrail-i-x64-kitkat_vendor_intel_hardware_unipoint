@@ -31,6 +31,7 @@ LOCAL_C_INCLUDES := \
 LOCAL_MODULE := unipoint-daemon
 include $(BUILD_EXECUTABLE)
 
+
 include $(call all-makefiles-under,$(LOCAL_PATH))
 
 # Build the demo app

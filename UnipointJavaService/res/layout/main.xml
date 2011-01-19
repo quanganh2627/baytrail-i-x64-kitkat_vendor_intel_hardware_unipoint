@@ -9,7 +9,13 @@
     android:layout_height="wrap_content" 
     android:text="@string/hello"
     />
-    <TextView  
+<Button android:layout_width="fill_parent" 
+    android:layout_height="wrap_content" 
+    android:id="@+id/unipointonoffswitch" 
+    android:text="@string/turnonunipoint">
+ </Button>
+    
+<TextView  
 	
     android:layout_width="fill_parent" 
     android:layout_height="wrap_content" 
@@ -20,11 +26,7 @@
 	android:layout_width="fill_parent" 
     android:layout_height="wrap_content"
     android:text="@string/getcurrentmode" ></Button>
-<Button     
- 	android:id="@+id/changemodebutton"
-	android:layout_width="fill_parent" 
-    android:layout_height="wrap_content"
-    android:text="@string/switchtomode_normal" ></Button>
+
     
 <Button     
  	android:id="@+id/changemodebutton1"
@@ -32,10 +34,15 @@
     android:layout_height="wrap_content"
     android:text="@string/switchtomode_volume" ></Button>
 
-<Button     
- 	android:id="@+id/reconnecttodaemon"
-	android:layout_width="fill_parent" 
-    android:layout_height="wrap_content"
-    android:text="@string/restartservice" ></Button>
+
     
+<Button android:layout_width="fill_parent" 
+	android:layout_height="wrap_content" 
+	android:id="@+id/changemodebutton" 
+	android:text="@string/switchtomode_normal"></Button>
+<Button android:layout_width="fill_parent" 
+	android:layout_height="wrap_content" 
+	android:id="@+id/reconnecttodaemon" 
+	android:text="@string/restartservice"></Button>
+
 </LinearLayout>

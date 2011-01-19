@@ -4,4 +4,7 @@
 void* socketthread(void* cnt);
 int CallBack_NotifyClientOnStateChange();
 
+void closeclientsocket();
+
+
 #endif

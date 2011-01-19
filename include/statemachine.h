@@ -17,8 +17,9 @@
 #define MASK_DOUBLE_TAP		0x200
 
 typedef enum E_MODE{
-	MODE_NORMAL,
-	MODE_VOLUME
+	MODE_NONE = 0,
+	MODE_NORMAL = 1,
+	MODE_VOLUME = 2
 } MODE; 
 
 
