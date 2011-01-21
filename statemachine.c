@@ -58,7 +58,7 @@ extern void event_send_gesture(
 
 
 
-static MODE gCurMode = MODE_NONE;
+static MODE gCurMode = MODE_NORMAL;
 static bool bexceeded = false; // indicate whether the history box index 0 is really 0.
 
 
