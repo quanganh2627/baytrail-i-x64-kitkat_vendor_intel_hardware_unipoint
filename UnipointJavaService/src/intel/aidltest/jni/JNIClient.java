@@ -10,7 +10,7 @@ import intel.aidltest.Unipoint_ServiceActivity;
 import intel.aidltest.service.UnipointService;
 
 public final class JNIClient {
-	public static final String TAG = "JNICLient";
+	public static final String TAG = "Unipoint-JNICLient";
 
 	public static native int getCurrentMode();
 
@@ -34,7 +34,7 @@ public final class JNIClient {
 
 		// UnipointService.CallBackModeSwitchRequest(newmode);
 		if(Unipoint_ServiceActivity.bDEBUG)
-		Log.v("DEBUG", "CAlled by C, new mode is " + newmode);
+			Log.v(TAG, "CallBackModeSwitchRequest, new mode is " + newmode);
 
 		Intent b = new Intent(SERVICEACTION);
 		Bundle bundle = new Bundle();
@@ -48,12 +48,12 @@ public final class JNIClient {
 
 		if (null == context) {
 			if (Unipoint_ServiceActivity.bDEBUG)
-				Log.v("DEBUG", "context is null");
+				Log.v(TAG, "context is null");
 			return 0;
 		} else {
 
 			if (Unipoint_ServiceActivity.bDEBUG)
-				Log.v("DEBUG", "Call Service function ");
+				Log.v(TAG, "Call Service function ");
 			context.startService(b);
 
 		}

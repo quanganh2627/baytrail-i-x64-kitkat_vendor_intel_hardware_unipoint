@@ -3,6 +3,9 @@ package intel.aidltest;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+/*
+ * This file is not used yet , but will be used if the unipointmode get complex . 
+ */
 public class UnipointMode implements Parcelable {
 
 	public static int MODE_NORMAL = 1;

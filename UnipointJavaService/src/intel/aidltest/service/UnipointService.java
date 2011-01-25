@@ -190,19 +190,36 @@ public class UnipointService extends Service {
         public int getCurrentMode() throws RemoteException {
             // TODO Auto-generated method stub
             if (Unipoint_ServiceActivity.bDEBUG)
-                Log.v(TAG, "Got getCurrentMode request");
+				Log.v(TAG, "UnipointSerivceimpl:  Got getCurrentMode request from API layer ");
             int data = JNIClient.getCurrentMode();
 
-            if (Unipoint_ServiceActivity.bDEBUG)
-                Log.v(TAG, "Got unipoit Mode :" + data);
 
             String message = "";
-            if (data == 0) {
-                message = "Unipoint Mode Detected : MODE_NORMAL";
-            } else if (data == 1) {
-                message = "Unipoint Mode Detected: MODE_VOLUME";
-
-            }
+			if(data == Unipoint_ServiceActivity.RET_FAILURE)
+			{
+				message = "Get Mode failed, return value "+data;
+			}else{
+			
+				switch(data)
+				{
+				case Unipoint_ServiceActivity.MODE_NONE:
+					message = "Unipoint Mode Detected :DISABLED";
+					break;
+				case Unipoint_ServiceActivity.MODE_NORMAL:
+					message = "Unipoint Mode Detected: MODE_NORMAL";
+					break;
+				case Unipoint_ServiceActivity.MODE_VOLUME:
+					message = "Unipoint Mode Detected: MODE_VOLUME";
+					break;
+				default:
+					message = "Unrecognized Mode:  "+data;
+					
+					break;
+				}
+				
+			}
+			
+			
 
             if (Unipoint_ServiceActivity.bDEBUG)
                 Log.v(TAG, message);

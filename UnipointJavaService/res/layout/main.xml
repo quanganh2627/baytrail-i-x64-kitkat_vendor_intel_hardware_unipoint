@@ -12,7 +12,7 @@
 <Button android:layout_width="fill_parent" 
     android:layout_height="wrap_content" 
     android:id="@+id/unipointonoffswitch" 
-    android:text="@string/turnonunipoint">
+    android:text="@string/disableunipoint">
  </Button>
     
 <TextView  

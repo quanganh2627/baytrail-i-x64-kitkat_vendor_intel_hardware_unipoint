@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 public class NotificationDialog {
 
+	private static final String TAG = "Unipoint-NotificationDialog";
 	private Context context;
 	private NotificationManager notificationManager;
 	private WindowManager mWindowManager;
@@ -26,6 +27,7 @@ public class NotificationDialog {
 	private static boolean mShowing;
 	public Handler mUIthreadHandler;
 
+	//This runnable is used to hide the dialog from screen. 
 	private final class RemoveDialogRunnable implements Runnable {
 		public void run() {
 			hide();
@@ -74,8 +76,7 @@ public class NotificationDialog {
 					mWindowManager.addView(mNotificationDialog, lp);
 				} catch (Exception e) {
 					if (Unipoint_ServiceActivity.bDEBUG)
-						Log.v("DEBUG",
-								"Add View got exception, may already added ");
+						Log.v(TAG,"Add View got exception, may already added ");
 				}
 
 				mNotificationDialog.setVisibility(View.INVISIBLE);
@@ -99,7 +100,7 @@ public class NotificationDialog {
 			descriptions.setTextSize(mtextsize);
 
 			if (Unipoint_ServiceActivity.bDEBUG)
-				Log.v("DEBUG", "Start to Show the dialog, context :" + message
+				Log.v(TAG, "Start to Show the dialog, context :" + message
 						+ " textsize : " + mtextsize + " Color :" + mcolor);
 
 			mUIthreadHandler.removeCallbacks(mRemoveWindowRunnable);
@@ -108,13 +109,13 @@ public class NotificationDialog {
 					duration);
 			if (ret) {
 				if (Unipoint_ServiceActivity.bDEBUG)
-					Log.v("DEBUG",
+					Log.v(TAG,
 							"Add delayed callbakc, duration  Successfully"
 									+ duration);
 
 			} else {
 				if (Unipoint_ServiceActivity.bDEBUG)
-					Log.v("DEBUG", "Add delayed callbakc, duration  Failed"
+					Log.v(TAG, "Add delayed callbakc, duration  Failed"
 							+ duration);
 
 			}

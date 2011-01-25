@@ -67,7 +67,7 @@ public class Listener extends BroadcastReceiver {
 		Intent b = new Intent(Unipoint_ServiceActivity.SERVICEACTION);
 
 		if (Unipoint_ServiceActivity.bDEBUG)
-			Log.v("DEBUG", "Call Service function ");
+			Log.v(TAG, "Call Service function ");
 		context.startService(b);
 
 	}
