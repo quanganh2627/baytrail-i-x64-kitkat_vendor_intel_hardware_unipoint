@@ -17,4 +17,5 @@ LOCAL_C_INCLUDES := \
         $(call include-path-for, dbus)/dbus \
         external/libsvm 
 LOCAL_MODULE := socketclient
+LOCAL_MODULE_TAGS := optional
 include $(BUILD_EXECUTABLE)
