@@ -93,7 +93,7 @@ int search_unipoint_device_path(void)
         snprintf(unipoint_device_path, BUF_SIZE, "%s%s/device/name",
                  UNIPOINT_PRE_PATH, entry->d_name);
         if (check_name() && !strncmp(entry->d_name, "event", 5)) {
-            sprintf(unipoint_device_path, "%s%s", "/dev/input/", entry->d_name);
+            snprintf(unipoint_device_path,BUF_SIZE, "%s%s", "/dev/input/", entry->d_name);
             return 1;
         }
     }
@@ -355,7 +355,7 @@ event_dispatcher(event_handles * restrict const handles, int uinput_fd, FILE *sa
     int delay;
     int gs[11];
 
-
+    int MAX_DELAY_TIME = 20000;
     memset(gs, 0, sizeof(unsigned int)*11);
 
     //If there is data from stored file
@@ -371,6 +371,10 @@ event_dispatcher(event_handles * restrict const handles, int uinput_fd, FILE *sa
                     last_clock = clock();
                     flag = 0;
                 }
+		 if(delay<0 || delay>MAX_DELAY_TIME)
+		{
+			delay = 50;
+		}
                 while (clock() - last_clock < delay) {
                     //fprintf(stdout, ".");
                 }

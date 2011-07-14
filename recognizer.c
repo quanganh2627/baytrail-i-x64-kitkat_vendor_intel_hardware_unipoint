@@ -321,7 +321,16 @@ int classifyGesture() {
 	//find peak of normalized (it's at same peak unnormalized
 	int left = ((angleMagMaxIndex-1)<0)?ANGLE_HISTOGRAM_BIN_COUNT-1:angleMagMaxIndex-1;
 	int right = ((angleMagMaxIndex+1)>ANGLE_HISTOGRAM_BIN_COUNT-1)?0:angleMagMaxIndex+1;
-	float peakedness = gangleHistogramNorm[left] + gangleHistogramNorm[angleMagMaxIndex] + gangleHistogramNorm[right];
+	float peakedness = 0.0;
+	if ( left < ANGLE_HISTOGRAM_BIN_COUNT
+			 && left >= 0
+			 && angleMagMaxIndex < ANGLE_HISTOGRAM_BIN_COUNT
+			 && angleMagMaxIndex >= 0
+			 && right < ANGLE_HISTOGRAM_BIN_COUNT
+			 && right >= 0)
+	{
+	peakedness = gangleHistogramNorm[left] + gangleHistogramNorm[angleMagMaxIndex] + gangleHistogramNorm[right];
+	}
 
 	angleThis = angleMagMaxIndex * (float)ANGLE_HISTOGRAM_BIN_SIZE + (float)ANGLE_HISTOGRAM_BIN_SIZE/2;
 
