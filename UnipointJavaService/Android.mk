@@ -24,7 +24,7 @@ LOCAL_JNI_SHARED_LIBRARIES := libUnipoint
 
 LOCAL_PACKAGE_NAME := UnipointJavaService
 
-LOCAL_PROGUARD_FLAGS := -include $(LOCAL_PATH)/proguard.flags
+#LOCAL_PROGUARD_FLAGS := -include $(LOCAL_PATH)/proguard.flags
 
 include $(BUILD_PACKAGE)
 
