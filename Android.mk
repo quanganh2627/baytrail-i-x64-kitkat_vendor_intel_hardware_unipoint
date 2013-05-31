@@ -18,12 +18,6 @@ LOCAL_CFLAGS := \
     -std=gnu99 -pedantic
 # LOCAL_SHARED_LIBRARIES := libconfig libsvm libdbus
 
-$(info WARNING: PRODUCT_COPY_FILES disabled in $(LOCAL_PATH))
-#PRODUCT_COPY_FILES += \
-#       $(LOCAL_PATH)/excluded-input-devices.xml:system/etc/excluded-input-devices.xml
-#        $(LOCAL_PATH)/example.model:system/etc/example.model \
-#        $(LOCAL_PATH)/unipoint.conf:system/etc/unipoint.conf \
-
 LOCAL_C_INCLUDES := \
         $(LOCAL_PATH)/include  
 #       $(call include-path-for, dbus) \
